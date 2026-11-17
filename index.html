@@ -51,7 +51,6 @@ input:focus{outline:none;border-color:var(--accent)}
 
 .btn{font:500 13px/1 Inter,sans-serif;padding:10px 16px;border-radius:var(--r);border:1px solid var(--border);background:var(--accent);color:#fff;cursor:pointer;transition:background .15s;width:100%;letter-spacing:.02em;margin-top:14px}
 .btn:hover{background:var(--accent-h)}
-.btn:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
 
 .msg{padding:9px 13px;border-radius:var(--r);margin-top:12px;font-size:13px;display:none;border-left:3px solid}
 .msg.show{display:block}
@@ -121,23 +120,6 @@ function init(){
   chIn = ably.channels.get(NS+':in');
   chState = ably.channels.get(NS+':state');
   chState.subscribe(msg => updateUI(msg.data));
-  checkCd();
-  setInterval(checkCd, 1000);
-}
-
-let lastReq = +(localStorage.getItem('last_req')||0);
-let cdMin = 1;
-
-function checkCd(){
-  const left = cdMin * 60000 - (Date.now() - lastReq);
-  if(left > 0){
-    const s = Math.ceil(left/1000);
-    $('subBtn').disabled = true;
-    $('subBtn').textContent = `Cekej ${s}s...`;
-  }else{
-    $('subBtn').disabled = false;
-    $('subBtn').textContent = 'Odeslat pozadavek';
-  }
 }
 
 function sendReq(){
@@ -146,16 +128,12 @@ function sendReq(){
   if(!link) return showMsg('Zadej odkaz.','e');
   
   chIn.publish('req', {cid:devId(), link, title: title || link});
-  lastReq = Date.now();
-  localStorage.setItem('last_req', lastReq);
   $('uLink').value = '';
   $('uTitle').value = '';
   showMsg('Pozadavek odeslan adminovi.','s');
-  checkCd();
 }
 
 function updateUI(d){
-  if(d.cd) cdMin = d.cd;
   const q = d.queue || [];
   const cur = d.cur;
   
